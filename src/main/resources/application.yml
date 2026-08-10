@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: api-intelligence
+
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      base-url: https://api.gapgpt.app/v1
+      chat:
+        model: gpt-5-mini
+
+server:
+  port: ${SERVER_PORT:9090}
