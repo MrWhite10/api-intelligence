@@ -1,10 +1,9 @@
 package ir.platco.ai.ai;
 
+import ir.platco.ai.ai.dto.AiAnalysisRequest;
 import ir.platco.ai.ai.model.AiAnalysisResponse;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class AiController {
@@ -15,9 +14,9 @@ public class AiController {
         this.chatClient = chatClientBuilder.build();
     }
 
-    @GetMapping("/api/ai")
-    public AiAnalysisResponse ask(
-            @RequestParam String message
+    @PostMapping("/api/ai")
+    public AiAnalysisResponse analyze(
+            @RequestBody AiAnalysisRequest request
     ) {
 
         return chatClient
@@ -25,9 +24,12 @@ public class AiController {
                 .system("""
                     You are an expert API Management engineer.
 
-                    Analyze the user's technical topic.
+                    Analyze the requested technical topic.
 
-                    The response must contain:
+                    Adapt your explanation to the specified audience
+                    and technical context.
+
+                    Return a structured analysis containing:
                     - title
                     - category
                     - difficulty
@@ -47,7 +49,15 @@ public class AiController {
                     INTERMEDIATE,
                     ADVANCED
                     """)
-                .user(message)
+                .user("""
+                    Topic: %s
+                    Audience: %s
+                    Context: %s
+                    """.formatted(
+                        request.topic(),
+                        request.audience(),
+                        request.context()
+                ))
                 .call()
                 .entity(AiAnalysisResponse.class);
     }
