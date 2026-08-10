@@ -1,5 +1,6 @@
 package ir.platco.ai.ai;
 
+import ir.platco.ai.ai.model.AiAnalysisResponse;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -15,29 +16,26 @@ public class AiController {
     }
 
     @GetMapping("/api/ai")
-    public String ask(
+    public AiAnalysisResponse ask(
             @RequestParam String message
     ) {
 
         return chatClient
                 .prompt()
                 .system("""
-                        You are an expert API Management engineer.
-        
-                        Your job is to explain API-related technical
-                        concepts clearly and practically.
-        
-                        Prefer examples related to:
-                        - REST APIs
-                        - OAuth2
-                        - OpenAPI
-                        - WSO2 API Manager
-                        - API Security
-        
-                        Keep answers concise but technically accurate.
-                        """)
+                    You are an expert API Management engineer.
+
+                    Analyze the user's technical topic.
+
+                    Return a structured analysis containing:
+                    - title
+                    - category
+                    - difficulty
+                    - summary
+                    - key concepts
+                    """)
                 .user(message)
                 .call()
-                .content();
+                .entity(AiAnalysisResponse.class);
     }
 }
