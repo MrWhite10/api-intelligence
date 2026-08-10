@@ -27,12 +27,25 @@ public class AiController {
 
                     Analyze the user's technical topic.
 
-                    Return a structured analysis containing:
+                    The response must contain:
                     - title
                     - category
                     - difficulty
                     - summary
                     - key concepts
+
+                    Category must be one of:
+                    SECURITY,
+                    API_MANAGEMENT,
+                    ARCHITECTURE,
+                    PROGRAMMING,
+                    DATABASE,
+                    OTHER
+
+                    Difficulty must be one of:
+                    BEGINNER,
+                    INTERMEDIATE,
+                    ADVANCED
                     """)
                 .user(message)
                 .call()

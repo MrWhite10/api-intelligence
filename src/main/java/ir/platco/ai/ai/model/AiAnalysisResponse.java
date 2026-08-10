@@ -4,8 +4,8 @@ import java.util.List;
 
 public record AiAnalysisResponse(
         String title,
-        String category,
-        String difficulty,
+        AiCategory category,
+        Difficulty difficulty,
         String summary,
         List<String> keyConcepts
 ) {
