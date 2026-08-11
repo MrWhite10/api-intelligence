@@ -8,57 +8,16 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 public class AiController {
 
-    private final ChatClient chatClient;
+    private final AiService aiService;
 
-    public AiController(ChatClient.Builder chatClientBuilder) {
-        this.chatClient = chatClientBuilder.build();
+    public AiController(AiService aiService) {
+        this.aiService = aiService;
     }
 
     @PostMapping("/api/ai")
     public AiAnalysisResponse analyze(
             @RequestBody AiAnalysisRequest request
     ) {
-
-        return chatClient
-                .prompt()
-                .system("""
-                    You are an expert API Management engineer.
-
-                    Analyze the requested technical topic.
-
-                    Adapt your explanation to the specified audience
-                    and technical context.
-
-                    Return a structured analysis containing:
-                    - title
-                    - category
-                    - difficulty
-                    - summary
-                    - key concepts
-
-                    Category must be one of:
-                    SECURITY,
-                    API_MANAGEMENT,
-                    ARCHITECTURE,
-                    PROGRAMMING,
-                    DATABASE,
-                    OTHER
-
-                    Difficulty must be one of:
-                    BEGINNER,
-                    INTERMEDIATE,
-                    ADVANCED
-                    """)
-                .user("""
-                    Topic: %s
-                    Audience: %s
-                    Context: %s
-                    """.formatted(
-                        request.topic(),
-                        request.audience(),
-                        request.context()
-                ))
-                .call()
-                .entity(AiAnalysisResponse.class);
+        return aiService.analyze(request);
     }
 }
