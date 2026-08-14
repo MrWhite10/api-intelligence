@@ -1,9 +1,12 @@
 package ir.platco.ai.analysis;
 
 import ir.platco.ai.analysis.dto.ApiAnalysisResponse;
+import ir.platco.ai.analysis.dto.RuleViolation;
 import ir.platco.ai.openapi.dto.OpenApiMetadata;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class ApiAnalysisService {
@@ -14,48 +17,55 @@ public class ApiAnalysisService {
         this.chatClient = chatClientBuilder.build();
     }
 
-    public ApiAnalysisResponse analyze(OpenApiMetadata metadata) {
+    public ApiAnalysisResponse analyze(OpenApiMetadata metadata, List<RuleViolation> violations) {
         String endpointsContext = buildEndpointsContext(metadata);
+        String ruleContext = buildRuleContext(violations);
+
         return chatClient
                 .prompt()
                 .system("""
-                        You are an expert API architect and API security engineer.
+                You are an expert API architect and API security engineer.
 
-                        Analyze the provided OpenAPI metadata.
+                You will receive:
 
-                        Evaluate:
+                1. OpenAPI metadata
+                2. Deterministic rule violations detected by the application
 
-                        1. API design quality
-                        2. Security concerns
-                        3. Documentation quality
-                        4. Potential design problems
-                        5. Improvements
+                The rule violations are facts already verified by
+                the application. Do not contradict them.
 
-                        Scores must be between 0 and 100.
+                Your responsibilities are:
 
-                        Be practical and technically accurate.
+                - Prioritize the detected issues
+                - Explain their technical impact
+                - Suggest practical improvements
+                - Identify additional issues only when supported
+                  by the provided API metadata
 
-                        Do not invent endpoints that are not present
-                        in the provided API metadata.
-                        """)
+                Scores must be between 0 and 100.
+
+                Do not invent endpoints or security configurations.
+                """)
                 .user("""
-                        API Name:
-                        %s
+                API:
 
-                        Version:
-                        %s
+                Name: %s
+                Version: %s
+                Description: %s
 
-                        Description:
-                        %s
+                Endpoints:
 
-                        Endpoints:
+                %s
 
-                        %s
-                        """.formatted(
+                Verified Rule Violations:
+
+                %s
+                """.formatted(
                         metadata.title(),
                         metadata.version(),
                         metadata.description(),
-                        endpointsContext
+                        endpointsContext,
+                        ruleContext
                 ))
                 .call()
                 .entity(ApiAnalysisResponse.class);
@@ -74,6 +84,31 @@ public class ApiAnalysisService {
                                 endpoint.method(),
                                 endpoint.path(),
                                 endpoint.summary()
+                        )
+                )
+                .collect(java.util.stream.Collectors.joining("\n"));
+    }
+
+    private String buildRuleContext(List<RuleViolation> violations) {
+
+        if (violations.isEmpty()) {
+            return "No deterministic rule violations were found.";
+        }
+
+        return violations.stream()
+                .map(violation ->
+                        """
+                        Rule: %s
+                        Severity: %s
+                        Path: %s
+                        Method: %s
+                        Message: %s
+                        """.formatted(
+                                violation.ruleId(),
+                                violation.severity(),
+                                violation.path(),
+                                violation.method(),
+                                violation.message()
                         )
                 )
                 .collect(java.util.stream.Collectors.joining("\n"));

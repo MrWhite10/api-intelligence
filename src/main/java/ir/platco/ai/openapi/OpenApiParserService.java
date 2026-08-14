@@ -15,7 +15,7 @@ import java.util.Map;
 @Service
 public class OpenApiParserService {
 
-    public OpenApiMetadata parse(String content) {
+    public OpenAPI parseOpenApi(String content) {
 
         OpenAPI openAPI = new OpenAPIV3Parser()
                 .readContents(content)
@@ -26,6 +26,11 @@ public class OpenApiParserService {
                     "Invalid OpenAPI specification"
             );
         }
+
+        return openAPI;
+    }
+
+    public OpenApiMetadata extractMetadata(OpenAPI openAPI) {
 
         String title = null;
         String version = null;
