@@ -1,88 +1,25 @@
 package ir.platco.ai.analysis.rule;
 
-import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.Operation;
-import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 import ir.platco.ai.analysis.dto.RuleViolation;
 import ir.platco.ai.analysis.dto.Severity;
+import ir.platco.ai.analysis.model.ApiOperationContext;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Component
-public class ErrorResponseRule implements OpenApiRule {
+public class ErrorResponseRule implements OperationRule {
 
     @Override
-    public List<RuleViolation> evaluate(OpenAPI openAPI) {
+    public List<RuleViolation> evaluate(ApiOperationContext context) {
 
-        List<RuleViolation> violations = new ArrayList<>();
-
-        if (openAPI.getPaths() == null) {
-            return violations;
+        if (context.operation().getResponses() == null) {
+            return List.of();
         }
 
-        for (Map.Entry<String, PathItem> entry :
-                openAPI.getPaths().entrySet()) {
-
-            String path = entry.getKey();
-            PathItem pathItem = entry.getValue();
-
-            checkOperation(
-                    violations,
-                    "GET",
-                    path,
-                    pathItem.getGet()
-            );
-
-            checkOperation(
-                    violations,
-                    "POST",
-                    path,
-                    pathItem.getPost()
-            );
-
-            checkOperation(
-                    violations,
-                    "PUT",
-                    path,
-                    pathItem.getPut()
-            );
-
-            checkOperation(
-                    violations,
-                    "DELETE",
-                    path,
-                    pathItem.getDelete()
-            );
-
-            checkOperation(
-                    violations,
-                    "PATCH",
-                    path,
-                    pathItem.getPatch()
-            );
-        }
-
-        return violations;
-    }
-
-    private void checkOperation(
-            List<RuleViolation> violations,
-            String method,
-            String path,
-            Operation operation
-    ) {
-
-        if (operation == null
-                || operation.getResponses() == null) {
-
-            return;
-        }
-
-        ApiResponses responses = operation.getResponses();
+        ApiResponses responses =
+                context.operation().getResponses();
 
         boolean hasErrorResponse = responses.keySet()
                 .stream()
@@ -90,20 +27,21 @@ public class ErrorResponseRule implements OpenApiRule {
 
         if (!hasErrorResponse) {
 
-            violations.add(
+            return List.of(
                     new RuleViolation(
                             "RULE-004",
                             Severity.MEDIUM,
-                            path,
-                            method,
+                            context.path(),
+                            context.method(),
                             "Operation does not define any error responses."
                     )
             );
         }
+
+        return List.of();
     }
 
     private boolean isErrorResponse(String responseCode) {
-
         return responseCode.startsWith("4")
                 || responseCode.startsWith("5")
                 || responseCode.equalsIgnoreCase("default");
