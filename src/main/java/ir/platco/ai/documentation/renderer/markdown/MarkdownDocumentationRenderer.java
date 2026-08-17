@@ -235,7 +235,7 @@ public class MarkdownDocumentationRenderer
             DocumentedOperation operation
     ) {
 
-        if (operation.summary() == null) {
+        if (!hasText(operation.summary())) {
             return;
         }
 
@@ -252,7 +252,7 @@ public class MarkdownDocumentationRenderer
             DocumentedOperation operation
     ) {
 
-        if (operation.description() == null) {
+        if (!hasText(operation.description())) {
             return;
         }
 
@@ -427,7 +427,9 @@ public class MarkdownDocumentationRenderer
                         )
         );
 
-        if (response.description() != null) {
+        if (response.description() != null
+                && !response.description().isBlank()
+        ) {
 
             markdown.append(
                     "**Description:** %s\n\n"
@@ -504,7 +506,10 @@ public class MarkdownDocumentationRenderer
                         )
         );
 
-        if (schema.format() != null) {
+        if (
+                schema.format() != null
+                        && !schema.format().isBlank()
+        ) {
 
             markdown.append(
                     "%s  - Format: %s\n"
@@ -581,7 +586,9 @@ public class MarkdownDocumentationRenderer
                         )
         );
 
-        if (field.format() != null) {
+        if (field.format() != null
+            && !field.format().isBlank()
+        ) {
 
             markdown.append(
                     "%s  - Format: %s\n"
@@ -592,7 +599,9 @@ public class MarkdownDocumentationRenderer
             );
         }
 
-        if (field.description() != null) {
+        if (field.description() != null
+                && !field.description().isBlank()
+        ) {
 
             markdown.append(
                     "%s  - Description: %s\n"
@@ -603,7 +612,9 @@ public class MarkdownDocumentationRenderer
             );
         }
 
-        if (field.example() != null) {
+        if (field.example() != null
+                && !field.example().isBlank()
+        ) {
 
             markdown.append(
                     "%s  - Example: %s\n"
@@ -620,7 +631,13 @@ public class MarkdownDocumentationRenderer
     ) {
 
         return value != null
+                && !value.isBlank()
                 ? value
                 : "";
+    }
+
+    private boolean hasText(String value) {
+        return value != null
+                && !value.isBlank();
     }
 }

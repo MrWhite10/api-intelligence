@@ -61,6 +61,8 @@ public class DocumentationAgent {
                   request body and response information.
                 - If information does not exist,
                   leave the corresponding field null or empty.
+                - If an operation does not define a request body,
+                  set requestBody to null.
 
                 API information:
 
