@@ -1,7 +1,8 @@
 package ir.platco.ai.documentation.application.impl;
 
 import io.swagger.v3.oas.models.OpenAPI;
-import ir.platco.ai.documentation.DocumentationService;
+import ir.platco.ai.documentation.agent.DocumentationAgent;
+import ir.platco.ai.documentation.agent.model.DocumentationRequestContext;
 import ir.platco.ai.documentation.application.GenerateDocumentationUseCase;
 import ir.platco.ai.documentation.model.GeneratedDocumentation;
 import ir.platco.ai.openapi.OpenApiParserService;
@@ -14,14 +15,14 @@ public class GenerateDocumentationUseCaseImpl
 
     private final OpenApiParserService parserService;
 
-    private final DocumentationService documentationService;
+    private final DocumentationAgent documentationAgent;
 
     public GenerateDocumentationUseCaseImpl(
             OpenApiParserService parserService,
-            DocumentationService documentationService
+            DocumentationAgent documentationAgent
     ) {
         this.parserService = parserService;
-        this.documentationService = documentationService;
+        this.documentationAgent = documentationAgent;
     }
 
     @Override
@@ -40,10 +41,15 @@ public class GenerateDocumentationUseCaseImpl
                         openAPI
                 );
 
-        return documentationService.generate(
-                openAPI,
-                metadata,
-                template
+        DocumentationRequestContext context =
+                new DocumentationRequestContext(
+                        openAPI,
+                        metadata,
+                        template
+                );
+
+        return documentationAgent.generate(
+                context
         );
     }
 }

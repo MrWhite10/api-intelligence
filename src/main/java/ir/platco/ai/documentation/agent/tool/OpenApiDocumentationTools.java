@@ -35,13 +35,6 @@ public class OpenApiDocumentationTools {
             String method
     ) {
 
-        System.out.println(
-                "Tool called: getOperationDetails -> "
-                        + method
-                        + " "
-                        + path
-        );
-
         PathItem pathItem =
                 openAPI.getPaths()
                         .get(path);

@@ -1,18 +1,17 @@
-package ir.platco.ai.documentation;
+package ir.platco.ai.documentation.agent;
 
-import io.swagger.v3.oas.models.OpenAPI;
+import ir.platco.ai.documentation.agent.model.DocumentationRequestContext;
 import ir.platco.ai.documentation.agent.tool.OpenApiDocumentationTools;
 import ir.platco.ai.documentation.model.GeneratedDocumentation;
-import ir.platco.ai.openapi.dto.OpenApiMetadata;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-@Service
-public class DocumentationService {
+@Component
+public class DocumentationAgent {
 
     private final ChatClient chatClient;
 
-    public DocumentationService(
+    public DocumentationAgent(
             ChatClient.Builder chatClientBuilder
     ) {
         this.chatClient =
@@ -20,42 +19,44 @@ public class DocumentationService {
     }
 
     public GeneratedDocumentation generate(
-            OpenAPI openAPI,
-            OpenApiMetadata metadata,
-            String template
+            DocumentationRequestContext context
     ) {
 
         OpenApiDocumentationTools tools =
                 new OpenApiDocumentationTools(
-                        openAPI
+                        context.openAPI()
                 );
 
         String endpointsContext =
                 buildEndpointsContext(
-                        metadata
+                        context
                 );
 
         String content = chatClient
                 .prompt()
                 .system("""
-                        You are an expert technical API documentation writer.
+                        You are an autonomous API documentation agent.
 
-                        Your task is to generate complete API documentation
-                        based only on the provided OpenAPI specification.
+                        Your responsibility is to generate accurate and
+                        complete API documentation based only on the provided
+                        OpenAPI specification and available tools.
 
                         You have access to tools that can retrieve detailed
                         information about API operations.
 
-                        Available tool capabilities include retrieving:
-                        - operation details
-                        - parameters
-                        - operation descriptions
-                        - response status codes
-                        - response descriptions
+                        Before generating the final documentation:
 
-                        Use the available tools whenever the provided context
-                        does not contain enough information to accurately
-                        complete the documentation.
+                        1. Identify all available API endpoints.
+
+                        2. For every endpoint, retrieve detailed information
+                           using the available tools.
+
+                        3. Use the retrieved information to document:
+                           - operation descriptions
+                           - parameters
+                           - request information
+                           - response status codes
+                           - response descriptions
 
                         Rules:
 
@@ -67,16 +68,13 @@ public class DocumentationService {
 
                         - Do not invent API endpoints.
 
-                        - Do not invent request parameters.
+                        - Do not invent parameters.
 
                         - Do not invent request bodies.
 
                         - Do not invent response fields.
 
                         - Do not invent response status codes.
-
-                        - When detailed information about an endpoint is
-                          required, use the available tools.
 
                         - If information does not exist in the OpenAPI
                           specification, clearly state that it is not defined.
@@ -102,10 +100,10 @@ public class DocumentationService {
 
                         %s
                         """.formatted(
-                        template,
-                        metadata.title(),
-                        metadata.version(),
-                        metadata.description(),
+                        context.template(),
+                        context.metadata().title(),
+                        context.metadata().version(),
+                        context.metadata().description(),
                         endpointsContext
                 ))
                 .tools(tools)
@@ -118,10 +116,11 @@ public class DocumentationService {
     }
 
     private String buildEndpointsContext(
-            OpenApiMetadata metadata
+            DocumentationRequestContext context
     ) {
 
-        return metadata.endpoints()
+        return context.metadata()
+                .endpoints()
                 .stream()
                 .map(endpoint ->
                         """
