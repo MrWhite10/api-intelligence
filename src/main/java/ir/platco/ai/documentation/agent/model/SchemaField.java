@@ -1,15 +1,17 @@
 package ir.platco.ai.documentation.agent.model;
 
-public record ParameterDetails(
+public record SchemaField(
 
         String name,
 
-        String location,
-
         String type,
+
+        String format,
 
         boolean required,
 
-        String description
+        String description,
+
+        String example
 ) {
 }

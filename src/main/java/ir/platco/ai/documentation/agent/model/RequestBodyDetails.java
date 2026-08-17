@@ -2,11 +2,9 @@ package ir.platco.ai.documentation.agent.model;
 
 import java.util.List;
 
-public record ResponseDetails(
+public record RequestBodyDetails(
 
-        String statusCode,
-
-        String description,
+        boolean required,
 
         List<String> contentTypes,
 
