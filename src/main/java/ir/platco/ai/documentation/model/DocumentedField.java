@@ -1,6 +1,6 @@
 package ir.platco.ai.documentation.model;
 
-public record DocumentationField(
+public record DocumentedField(
 
         String name,
 

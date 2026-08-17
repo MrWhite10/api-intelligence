@@ -2,12 +2,12 @@ package ir.platco.ai.documentation.model;
 
 import java.util.List;
 
-public record DocumentationRequestBody(
+public record DocumentedRequestBody(
 
         boolean required,
 
         List<String> contentTypes,
 
-        DocumentationSchema schema
+        DocumentedSchema schema
 ) {
 }

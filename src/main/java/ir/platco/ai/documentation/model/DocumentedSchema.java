@@ -2,14 +2,14 @@ package ir.platco.ai.documentation.model;
 
 import java.util.List;
 
-public record DocumentationSchema(
+public record DocumentedSchema(
 
         String type,
 
         String format,
 
-        List<DocumentationField> fields,
+        List<DocumentedField> fields,
 
-        DocumentationSchema items
+        DocumentedSchema items
 ) {
 }

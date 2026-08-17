@@ -2,7 +2,7 @@ package ir.platco.ai.documentation.model;
 
 import java.util.List;
 
-public record DocumentationResponse(
+public record DocumentedResponse(
 
         String statusCode,
 
@@ -10,6 +10,6 @@ public record DocumentationResponse(
 
         List<String> contentTypes,
 
-        DocumentationSchema schema
+        DocumentedSchema schema
 ) {
 }

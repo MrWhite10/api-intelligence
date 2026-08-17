@@ -12,10 +12,10 @@ public record DocumentedOperation(
 
         String description,
 
-        List<DocumentationParameter> parameters,
+        List<DocumentedParameter> parameters,
 
-        DocumentationRequestBody requestBody,
+        DocumentedRequestBody requestBody,
 
-        List<DocumentationResponse> responses
+        List<DocumentedResponse> responses
 ) {
 }
