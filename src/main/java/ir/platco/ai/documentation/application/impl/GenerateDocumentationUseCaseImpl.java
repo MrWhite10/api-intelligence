@@ -41,6 +41,7 @@ public class GenerateDocumentationUseCaseImpl
                 );
 
         return documentationService.generate(
+                openAPI,
                 metadata,
                 template
         );

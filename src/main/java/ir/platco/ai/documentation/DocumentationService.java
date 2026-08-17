@@ -1,5 +1,7 @@
 package ir.platco.ai.documentation;
 
+import io.swagger.v3.oas.models.OpenAPI;
+import ir.platco.ai.documentation.agent.tool.OpenApiDocumentationTools;
 import ir.platco.ai.documentation.model.GeneratedDocumentation;
 import ir.platco.ai.openapi.dto.OpenApiMetadata;
 import org.springframework.ai.chat.client.ChatClient;
@@ -13,34 +15,74 @@ public class DocumentationService {
     public DocumentationService(
             ChatClient.Builder chatClientBuilder
     ) {
-        this.chatClient = chatClientBuilder.build();
+        this.chatClient =
+                chatClientBuilder.build();
     }
 
     public GeneratedDocumentation generate(
+            OpenAPI openAPI,
             OpenApiMetadata metadata,
             String template
     ) {
 
+        OpenApiDocumentationTools tools =
+                new OpenApiDocumentationTools(
+                        openAPI
+                );
+
         String endpointsContext =
-                buildEndpointsContext(metadata);
+                buildEndpointsContext(
+                        metadata
+                );
 
         String content = chatClient
                 .prompt()
                 .system("""
-                        You are an expert technical documentation writer.
+                        You are an expert technical API documentation writer.
 
-                        Your task is to generate API documentation based only on
-                        the provided OpenAPI information.
+                        Your task is to generate complete API documentation
+                        based only on the provided OpenAPI specification.
 
-                        Follow the provided documentation template exactly.
+                        You have access to tools that can retrieve detailed
+                        information about API operations.
+
+                        Available tool capabilities include retrieving:
+                        - operation details
+                        - parameters
+                        - operation descriptions
+                        - response status codes
+                        - response descriptions
+
+                        Use the available tools whenever the provided context
+                        does not contain enough information to accurately
+                        complete the documentation.
 
                         Rules:
+
+                        - Follow the structure of the provided documentation
+                          template.
+
+                        - Do not include instructions from the template in
+                          the final document.
+
                         - Do not invent API endpoints.
+
                         - Do not invent request parameters.
+
+                        - Do not invent request bodies.
+
                         - Do not invent response fields.
-                        - If information is missing, clearly state that it is
-                          not defined in the OpenAPI specification.
-                        - Preserve the structure and language of the template.
+
+                        - Do not invent response status codes.
+
+                        - When detailed information about an endpoint is
+                          required, use the available tools.
+
+                        - If information does not exist in the OpenAPI
+                          specification, clearly state that it is not defined.
+
+                        - Preserve the language of the documentation template.
+
                         - Return only the final Markdown documentation.
                         """)
                 .user("""
@@ -51,10 +93,12 @@ public class DocumentationService {
                         API Metadata:
 
                         Name: %s
+
                         Version: %s
+
                         Description: %s
 
-                        Endpoints:
+                        Available Endpoints:
 
                         %s
                         """.formatted(
@@ -64,6 +108,7 @@ public class DocumentationService {
                         metadata.description(),
                         endpointsContext
                 ))
+                .tools(tools)
                 .call()
                 .content();
 
@@ -89,6 +134,10 @@ public class DocumentationService {
                                 endpoint.summary()
                         )
                 )
-                .collect(java.util.stream.Collectors.joining("\n"));
+                .collect(
+                        java.util.stream.Collectors.joining(
+                                "\n"
+                        )
+                );
     }
 }
