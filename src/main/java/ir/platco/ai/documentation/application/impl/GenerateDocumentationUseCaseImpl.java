@@ -6,6 +6,8 @@ import ir.platco.ai.documentation.agent.model.DocumentationRequestContext;
 import ir.platco.ai.documentation.agent.tool.OpenApiDocumentationTools;
 import ir.platco.ai.documentation.application.GenerateDocumentationUseCase;
 import ir.platco.ai.documentation.model.GeneratedDocumentation;
+import ir.platco.ai.documentation.model.DocumentationResponse;
+import ir.platco.ai.documentation.renderer.DocumentationRenderer;
 import ir.platco.ai.openapi.OpenApiParserService;
 import ir.platco.ai.openapi.dto.OpenApiMetadata;
 import org.springframework.stereotype.Service;
@@ -16,20 +18,25 @@ public class GenerateDocumentationUseCaseImpl
 
     private final OpenApiParserService parserService;
     private final DocumentationAgent documentationAgent;
+    private final DocumentationRenderer documentationRenderer;
 
     public GenerateDocumentationUseCaseImpl(
             OpenApiParserService parserService,
-            DocumentationAgent documentationAgent
+            DocumentationAgent documentationAgent,
+            DocumentationRenderer documentationRenderer
     ) {
         this.parserService =
                 parserService;
 
         this.documentationAgent =
                 documentationAgent;
+
+        this.documentationRenderer =
+                documentationRenderer;
     }
 
     @Override
-    public GeneratedDocumentation generate(
+    public DocumentationResponse generate(
             String openApiContent,
             String template
     ) {
@@ -56,9 +63,19 @@ public class GenerateDocumentationUseCaseImpl
                         openAPI
                 );
 
-        return documentationAgent.generate(
-                context,
-                tools
+        GeneratedDocumentation documentation =
+                documentationAgent.generate(
+                        context,
+                        tools
+                );
+
+        String content =
+                documentationRenderer.render(
+                        documentation
+                );
+
+        return new DocumentationResponse(
+                content
         );
     }
 }
