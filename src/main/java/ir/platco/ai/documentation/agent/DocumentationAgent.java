@@ -63,6 +63,14 @@ public class DocumentationAgent {
                   leave the corresponding field null or empty.
                 - If an operation does not define a request body,
                   set requestBody to null.
+                - If a schema does not exist in the OpenAPI specification,
+                  set schema to null.
+                - Never create an empty schema object.
+                - Do not populate schema with empty strings.
+                - If requestBody does not exist, set requestBody to null.
+                - If a response has no response content schema,
+                  set response.schema to null.
+                - Do not invent fields, examples, formats, or schemas.
 
                 API information:
 

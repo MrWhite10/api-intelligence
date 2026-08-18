@@ -71,7 +71,8 @@ public class GenerateDocumentationUseCaseImpl
 
         String content =
                 documentationRenderer.render(
-                        documentation
+                        documentation,
+                        template
                 );
 
         return new DocumentationResponse(

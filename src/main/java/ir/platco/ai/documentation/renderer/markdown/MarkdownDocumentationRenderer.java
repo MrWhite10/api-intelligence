@@ -5,8 +5,8 @@ import ir.platco.ai.documentation.model.DocumentedOperation;
 import ir.platco.ai.documentation.model.DocumentedParameter;
 import ir.platco.ai.documentation.model.DocumentedResponse;
 import ir.platco.ai.documentation.model.DocumentedSchema;
-import ir.platco.ai.documentation.renderer.DocumentationRenderer;
 import ir.platco.ai.documentation.model.GeneratedDocumentation;
+import ir.platco.ai.documentation.renderer.DocumentationRenderer;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -15,6 +15,60 @@ public class MarkdownDocumentationRenderer
 
     @Override
     public String render(
+            GeneratedDocumentation documentation,
+            String template
+    ) {
+
+        if (documentation == null) {
+            return "";
+        }
+
+        if (!hasText(template)) {
+            return renderDefault(
+                    documentation
+            );
+        }
+
+        return template
+                .replace(
+                        "{{introduction}}",
+                        valueOrEmpty(
+                                documentation.introduction()
+                        )
+                )
+                .replace(
+                        "{{api.name}}",
+                        valueOrEmpty(
+                                documentation.apiInformation() != null
+                                        ? documentation.apiInformation().name()
+                                        : null
+                        )
+                )
+                .replace(
+                        "{{api.version}}",
+                        valueOrEmpty(
+                                documentation.apiInformation() != null
+                                        ? documentation.apiInformation().version()
+                                        : null
+                        )
+                )
+                .replace(
+                        "{{api.description}}",
+                        valueOrEmpty(
+                                documentation.apiInformation() != null
+                                        ? documentation.apiInformation().description()
+                                        : null
+                        )
+                )
+                .replace(
+                        "{{operations}}",
+                        renderOperations(
+                                documentation
+                        )
+                );
+    }
+
+    private String renderDefault(
             GeneratedDocumentation documentation
     ) {
 
@@ -39,12 +93,43 @@ public class MarkdownDocumentationRenderer
         return markdown.toString();
     }
 
+    private String renderOperations(
+            GeneratedDocumentation documentation
+    ) {
+
+        if (
+                documentation.operations() == null
+                        || documentation.operations().isEmpty()
+        ) {
+
+            return "";
+        }
+
+        StringBuilder markdown =
+                new StringBuilder();
+
+        appendOperationsSummary(
+                markdown,
+                documentation
+        );
+
+        documentation.operations()
+                .forEach(operation ->
+                        appendOperation(
+                                markdown,
+                                operation
+                        )
+                );
+
+        return markdown.toString();
+    }
+
     private void appendIntroduction(
             StringBuilder markdown,
             GeneratedDocumentation documentation
     ) {
 
-        if (documentation.introduction() == null) {
+        if (!hasText(documentation.introduction())) {
             return;
         }
 
@@ -357,11 +442,8 @@ public class MarkdownDocumentationRenderer
         );
 
         if (
-                operation
-                        .requestBody()
-                        .contentTypes() != null
-                        && !operation
-                        .requestBody()
+                operation.requestBody().contentTypes() != null
+                        && !operation.requestBody()
                         .contentTypes()
                         .isEmpty()
         ) {
@@ -427,9 +509,7 @@ public class MarkdownDocumentationRenderer
                         )
         );
 
-        if (response.description() != null
-                && !response.description().isBlank()
-        ) {
+        if (hasText(response.description())) {
 
             markdown.append(
                     "**Description:** %s\n\n"
@@ -466,7 +546,7 @@ public class MarkdownDocumentationRenderer
             DocumentedSchema schema
     ) {
 
-        if (schema == null) {
+        if (schema == null || isEmptySchema(schema)) {
             return;
         }
 
@@ -491,25 +571,27 @@ public class MarkdownDocumentationRenderer
             int level
     ) {
 
+        if (schema == null || isEmptySchema(schema)) {
+            return;
+        }
+
         String indent =
                 "  ".repeat(
                         level
                 );
 
-        markdown.append(
-                "%s- Type: %s\n"
-                        .formatted(
-                                indent,
-                                valueOrEmpty(
-                                        schema.type()
-                                )
-                        )
-        );
+        if (hasText(schema.type())) {
 
-        if (
-                schema.format() != null
-                        && !schema.format().isBlank()
-        ) {
+            markdown.append(
+                    "%s- Type: %s\n"
+                            .formatted(
+                                    indent,
+                                    schema.type()
+                            )
+            );
+        }
+
+        if (hasText(schema.format())) {
 
             markdown.append(
                     "%s  - Format: %s\n"
@@ -542,7 +624,12 @@ public class MarkdownDocumentationRenderer
                     );
         }
 
-        if (schema.items() != null) {
+        if (
+                schema.items() != null
+                        && !isEmptySchema(
+                        schema.items()
+                )
+        ) {
 
             markdown.append(
                     "%s  - Items:\n"
@@ -586,9 +673,7 @@ public class MarkdownDocumentationRenderer
                         )
         );
 
-        if (field.format() != null
-            && !field.format().isBlank()
-        ) {
+        if (hasText(field.format())) {
 
             markdown.append(
                     "%s  - Format: %s\n"
@@ -599,9 +684,7 @@ public class MarkdownDocumentationRenderer
             );
         }
 
-        if (field.description() != null
-                && !field.description().isBlank()
-        ) {
+        if (hasText(field.description())) {
 
             markdown.append(
                     "%s  - Description: %s\n"
@@ -612,9 +695,7 @@ public class MarkdownDocumentationRenderer
             );
         }
 
-        if (field.example() != null
-                && !field.example().isBlank()
-        ) {
+        if (hasText(field.example())) {
 
             markdown.append(
                     "%s  - Example: %s\n"
@@ -636,8 +717,24 @@ public class MarkdownDocumentationRenderer
                 : "";
     }
 
-    private boolean hasText(String value) {
+    private boolean hasText(
+            String value
+    ) {
+
         return value != null
                 && !value.isBlank();
+    }
+
+    private boolean isEmptySchema(
+            DocumentedSchema schema
+    ) {
+
+        return !hasText(schema.type())
+                && !hasText(schema.format())
+                && (
+                schema.fields() == null
+                        || schema.fields().isEmpty()
+        )
+                && schema.items() == null;
     }
 }

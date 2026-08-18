@@ -5,6 +5,7 @@ import ir.platco.ai.documentation.model.GeneratedDocumentation;
 public interface DocumentationRenderer {
 
     String render(
-            GeneratedDocumentation documentation
+            GeneratedDocumentation documentation,
+            String template
     );
 }
